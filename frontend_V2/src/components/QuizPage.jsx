@@ -168,10 +168,20 @@ function QuizPage() {
   }
 
   function handleNext() {
-    if (currentQuestion < quizQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+    if (reviewMode) {
+      // In review mode, just navigate to next question or back to results
+      if (currentQuestion < quizQuestions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        exitReviewMode(); // Return to results when at last question
+      }
     } else {
-      finishQuiz();
+      // In quiz mode, normal behavior
+      if (currentQuestion < quizQuestions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        finishQuiz();
+      }
     }
   }
 
@@ -520,15 +530,15 @@ function QuizPage() {
       <div className="quiz-navigation">
         <button 
           className="quiz-button secondary" 
-          onClick={reviewMode ? exitReviewMode : handlePrevious}
+          onClick={reviewMode ? (currentQuestion === 0 ? exitReviewMode : handlePrevious) : handlePrevious}
           disabled={!reviewMode && currentQuestion === 0}
         >
-          {reviewMode ? '← Back to Results' : '← Previous'}
+          {reviewMode ? (currentQuestion === 0 ? '← Back to Results' : '← Previous') : '← Previous'}
         </button>
 
         <div className="nav-center">
           {reviewMode ? (
-            <span className="review-indicator">Review Mode</span>
+            <span className="review-indicator">Review Mode - Question {currentQuestion + 1} of {quizQuestions.length}</span>
           ) : (
             <span className="question-counter">
               {Object.keys(selectedAnswers).length} / {quizQuestions.length} answered
@@ -539,9 +549,12 @@ function QuizPage() {
         <button 
           className="quiz-button primary" 
           onClick={handleNext}
-          disabled={reviewMode || (!selectedAnswer && selectedAnswer !== 0)}
+          disabled={!reviewMode && (!selectedAnswer && selectedAnswer !== 0)}
         >
-          {currentQuestion === quizQuestions.length - 1 ? 'Finish Quiz →' : 'Next →'}
+          {reviewMode 
+            ? (currentQuestion === quizQuestions.length - 1 ? 'Back to Results →' : 'Next →')
+            : (currentQuestion === quizQuestions.length - 1 ? 'Finish Quiz →' : 'Next →')
+          }
         </button>
       </div>
     </div>

@@ -50,7 +50,7 @@ class ChatBot:
             reverse=True
         )
 
-        return results[:10]
+        return results[:1]
 
     # ----------------------------
     # Chat

@@ -5,6 +5,16 @@ function UploadPage({ onUpload, uploadedFileName }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
+  // Get file type icon
+  function getFileIcon(filename) {
+    const extension = filename.toLowerCase().split('.').pop();
+    if (extension === 'pdf') return '📄';
+    if (['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'gif'].includes(extension)) return '🖼️';
+    if (['html', 'htm'].includes(extension)) return '🌐';
+    if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'].includes(extension)) return '🎬';
+    return '📎';
+  }
+
   // Load all uploaded files
   async function loadFiles() {
     try {
@@ -23,7 +33,7 @@ function UploadPage({ onUpload, uploadedFileName }) {
     loadFiles();
   }, []);
 
-  // Upload PDF
+  // Upload file
   async function handleUpload() {
     if (!selectedFile) {
       setStatusMessage("Please choose a file before uploading.");
@@ -70,10 +80,10 @@ function UploadPage({ onUpload, uploadedFileName }) {
       <div className="upload-hero">
         <div>
           <p className="upload-eyebrow">Knowledge Base</p>
-          <h2>Upload a document</h2>
+          <h2>Upload a document, image, or video</h2>
           <p>
-            Add a source file so the assistant can answer questions using your
-            documents.
+            Add PDF files, images, HTML files, or videos so the assistant can answer questions using your
+            documents, image content (via OCR), and video transcripts.
           </p>
         </div>
       </div>
@@ -82,7 +92,7 @@ function UploadPage({ onUpload, uploadedFileName }) {
         <div className="upload-card-header">
           <div>
             <h3>Drop in your file</h3>
-            <p>Upload PDF documents to build your knowledge base.</p>
+            <p>Upload PDF documents, images (PNG, JPG, JPEG, BMP, TIFF, GIF), HTML files, or videos (MP4, AVI, MOV, WMV, FLV, WEBM, MKV, M4V) to build your knowledge base.</p>
           </div>
 
           {uploadedFileName && (
@@ -95,14 +105,14 @@ function UploadPage({ onUpload, uploadedFileName }) {
           <span className="upload-dropzone-text">
             {selectedFile
               ? selectedFile.name
-              : "Click here to choose a PDF"}
+              : "Click here to choose a PDF, Image, HTML, or Video file"}
           </span>
 
           <input
             id="document-upload"
             className="upload-input"
             type="file"
-            accept=".pdf"
+            accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff,.gif,.html,.htm,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v"
             onChange={(event) => {
               const file = event.target.files?.[0] || null;
 
@@ -146,16 +156,16 @@ function UploadPage({ onUpload, uploadedFileName }) {
 
       {/* Uploaded Files */}
       <div className="uploaded-files-card">
-        <h3>📂 Uploaded Documents</h3>
+        <h3>📂 Uploaded Files</h3>
 
         {uploadedFiles.length === 0 ? (
-          <p>No PDF files uploaded yet.</p>
+          <p>No files uploaded yet.</p>
         ) : (
           <ul className="uploaded-files-list">
             {uploadedFiles.map((file) => (
               <li key={file.name} className="uploaded-file-item">
                 <div>
-                  <strong>📄 {file.name}</strong>
+                  <strong>{getFileIcon(file.name)} {file.name}</strong>
                 </div>
 
                 <span>

@@ -2,6 +2,11 @@
 import ChatBox from "./components/ChatBox";
 import UploadPage from "./components/UploadPage";
 import QuizPage from "./components/QuizPage";
+import DocumentOverview from "./components/DocumentOverview";
+import DocumentViewer from "./components/DocumentViewer";
+import VideoViewer from "./components/VideoViewer";
+import DocumentQuiz from "./components/DocumentQuiz";
+import HTMLViewer from "./components/HTMLViewer";
 import "./App.css";
 
 function getCompactAnswer(text) {
@@ -54,6 +59,10 @@ function App() {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState(recentTopics[0].id);
   const [questionHistory, setQuestionHistory] = useState([]);
+  
+  // Document viewer states
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [documentViewMode, setDocumentViewMode] = useState(null); // 'view', 'quiz', null
 
   const activeTopic = recentTopics.find((topic) => topic.id === selectedTopicId) || recentTopics[0];
 
@@ -96,6 +105,44 @@ function App() {
   function handleFileUpload(fileName) {
     setUploadedFileName(fileName);
     setActiveView("upload");
+  }
+
+  function handleDocumentSelect(action, document) {
+    if (action === 'upload') {
+      setActiveView("upload");
+    } else if (action === 'view') {
+      setSelectedDocument(document);
+      setDocumentViewMode('view');
+      setActiveView("overview"); // Stay in overview but show document viewer
+    } else if (action === 'quiz') {
+      setSelectedDocument(document);
+      setDocumentViewMode('quiz');
+      setActiveView("overview"); // Stay in overview but show document quiz
+    }
+  }
+
+  function isHTMLFile(document) {
+    if (!document || !document.name) return false;
+    const extension = document.name.toLowerCase().split('.').pop();
+    return extension === 'html' || extension === 'htm';
+  }
+
+  function isVideoFile(document) {
+    if (!document || !document.name) return false;
+    const extension = document.name.toLowerCase().split('.').pop();
+    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'];
+    return videoExtensions.includes(extension);
+  }
+
+  function handleBackToOverview() {
+    setSelectedDocument(null);
+    setDocumentViewMode(null);
+    setActiveView("overview");
+  }
+
+  function handleQuizFromViewer(document) {
+    setSelectedDocument(document);
+    setDocumentViewMode('quiz');
   }
 
   return (
@@ -162,40 +209,72 @@ function App() {
         <div className="main-content">
           {activeView === "overview" && (
             <>
-              <section className="topic-card" id="overview">
-                {expanded && (
-                  <div className="topic-body">
-                    <h2>Choose the response mode</h2>
-                    <p>Switch between different ways of reading the answer before you ask a follow-up question.</p>
+              {documentViewMode === 'view' && selectedDocument ? (
+                isVideoFile(selectedDocument) ? (
+                  <VideoViewer 
+                    document={selectedDocument}
+                    onBack={handleBackToOverview}
+                    onQuizMe={handleQuizFromViewer}
+                  />
+                ) : isHTMLFile(selectedDocument) ? (
+                  <HTMLViewer 
+                    document={selectedDocument}
+                    onBack={handleBackToOverview}
+                    onQuizMe={handleQuizFromViewer}
+                  />
+                ) : (
+                  <DocumentViewer 
+                    document={selectedDocument}
+                    onBack={handleBackToOverview}
+                    onQuizMe={handleQuizFromViewer}
+                  />
+                )
+              ) : documentViewMode === 'quiz' && selectedDocument ? (
+                <DocumentQuiz 
+                  document={selectedDocument}
+                  onBack={handleBackToOverview}
+                />
+              ) : (
+                <>
+    
+                  <DocumentOverview onDocumentSelect={handleDocumentSelect} />
+                  <section className="topic-card" id="overview">
+                    {expanded && (
+                      <div className="topic-body">
+                        <br></br>
+                        <h2>Choose the response mode</h2>
+                        <p>Switch between different ways of reading the answer before you ask a follow-up question.</p>
 
-                    <div className="mode-switcher" role="tablist" aria-label="Response modes">
-                      {[
-                        { value: "title", label: "Title" },
-                        { value: "description", label: "Description" },
-                        { value: "summary", label: "Summary" },
-                      ].map((mode) => (
-                        <button
-                          key={mode.value}
-                          type="button"
-                          className={`mode-chip ${selectedField === mode.value ? "active" : ""}`}
-                          onClick={() => setSelectedField(mode.value)}
-                        >
-                          {mode.label}
-                        </button>
-                      ))}
-                    </div>
+                        <div className="mode-switcher" role="tablist" aria-label="Response modes">
+                          {[
+                            { value: "title", label: "Title" },
+                            { value: "description", label: "Description" },
+                            { value: "summary", label: "Summary" },
+                          ].map((mode) => (
+                            <button
+                              key={mode.value}
+                              type="button"
+                              className={`mode-chip ${selectedField === mode.value ? "active" : ""}`}
+                              onClick={() => setSelectedField(mode.value)}
+                            >
+                              {mode.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="answer-card">
+                    <h3>Latest answer preview</h3>
+                    <p>
+                      {answer
+                        ? getCompactAnswer(answer)
+                        : "Ask a question to generate a grounded response from the available documents."}
+                    </p>
                   </div>
-                )}
-              </section>
-
-              <div className="answer-card">
-                <h3>Latest answer preview</h3>
-                <p>
-                  {answer
-                    ? getCompactAnswer(answer)
-                    : "Ask a question to generate a grounded response from the available documents."}
-                </p>
-              </div>
+                </>
+              )}
             </>
           )}
 
